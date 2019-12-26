@@ -9,11 +9,8 @@ import android.os.Build
 import android.util.Log
 import java.math.BigInteger
 import java.net.InetAddress
-import java.net.NetworkInterface
-import java.net.SocketException
 import java.net.UnknownHostException
 import java.nio.ByteOrder
-import java.util.*
 
 
 private val TAG = "RootUtils"
@@ -50,7 +47,18 @@ fun isWiFiConnected(): Boolean {
 }
 
 fun getIPAddr(): String{
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    val wm = MyApplication.context!!.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    var ip: Int = wm.connectionInfo.ipAddress
+    ip = if (ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN) Integer.reverseBytes(ip) else ip
+    val ipBytes: ByteArray = BigInteger.valueOf(ip.toLong()).toByteArray()
+    try {
+        val ipObj: InetAddress = InetAddress.getByAddress(ipBytes)
+        return ipObj.hostAddress
+    } catch (e: UnknownHostException) {
+        Log.e(TAG, "Error getting WiFi IP address ", e)
+    }
+
+    /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         val connMgr = MyApplication.context!!.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         connMgr?: return "NULL"
         val network: Network = connMgr.activeNetwork ?: return "NULL"
@@ -75,12 +83,19 @@ fun getIPAddr(): String{
             Log.e(TAG, "Error getting WiFi IP address ", e)
         }
     }
-
+*/
     return "NULL"
 }
 
 //get adb over wifi port config, -1 if not open or error
 fun adbWifiPort(): Int{
     val portOutput = runCmdOut("getprop service.adb.tcp.port", 1500)
-    return if (portOutput == null || portOutput == "-1") -1 else portOutput.toInt()
+    if (portOutput == null || portOutput == "" || portOutput == "-1") return -1
+    else try {
+        return portOutput.toInt()
+    } catch(e:  NumberFormatException) {
+        Log.e(TAG, "Port Number error: " + e.message)
+        e.printStackTrace()
+        return -1
+    }
 }

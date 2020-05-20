@@ -58,6 +58,7 @@ fun getIPAddr(): String{
         Log.e(TAG, "Error getting WiFi IP address ", e)
     }
 
+    //doesn't work
     /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         val connMgr = MyApplication.context!!.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         connMgr?: return "NULL"

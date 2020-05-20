@@ -9,12 +9,18 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
-import android.text.Html
+import android.text.method.LinkMovementMethod
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.HtmlCompat
+
 
 @SuppressLint("SetTextI18n")
 class MainActivity : AppCompatActivity() {
@@ -123,11 +129,7 @@ class MainActivity : AppCompatActivity() {
             openConnBtn.text = "Enable ADB over Wi-Fi"
         }else{//enabled
             val ip = getIPAddr()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                indicatorText.text = Html.fromHtml("ADB Enabled! Connect to device with <i>adb connect \n<b>$ip:$adbPort</b></i>", Html.FROM_HTML_MODE_COMPACT)
-            }else{
-                indicatorText.text = Html.fromHtml("ADB Enabled! Connect to device with <i>adb connect \n<b>$ip:$adbPort</b></i>")
-            }
+            indicatorText.text = HtmlCompat.fromHtml("ADB Enabled! Connect to device with <i>adb connect \n<b>$ip:$adbPort</b></i>", HtmlCompat.FROM_HTML_MODE_COMPACT)
             openConnBtn.text = "Disable ADB over Wi-Fi"
         }
     }
@@ -163,6 +165,36 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             connMgr.registerNetworkCallback(networkRequest, networkCallback)
+        }
+    }
+
+    private fun showAbout(){
+        var alertDialog: AlertDialog? = null
+        val alertStr = HtmlCompat.fromHtml("Author: Jack Zhang (jackz314)<br/>This app is built with <a href=\"https://kotlinlang.org/\">Kotlin</a>. It is Open Sourced on GitHub <a href=\"https://github.com/jackz314/adb-tool/\">here</a>.", HtmlCompat.FROM_HTML_MODE_COMPACT)
+        val alertBuilder = AlertDialog.Builder(this)
+            .setTitle("About")
+            .setMessage(alertStr)
+            // The dialog is automatically dismissed when a dialog button is clicked.
+            .setPositiveButton(android.R.string.yes){ dialog, which -> alertDialog?.dismiss()}
+            .setIcon(R.drawable.ic_info_black_24dp)
+        alertDialog = alertBuilder.create()
+        alertDialog.show()
+        (alertDialog.findViewById<TextView>(android.R.id.message))?.movementMethod = LinkMovementMethod.getInstance()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val menuInflater: MenuInflater = menuInflater
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId){
+            R.id.menu_about -> {
+                showAbout()
+                return true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
